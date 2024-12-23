@@ -33,7 +33,7 @@ const verifyToken = async (req, res, next) => {
     console.log('Token à vérifier:', token);
     const decodedToken = await admin.auth().verifyIdToken(token);
     console.log('Token décodé:', decodedToken);
-    
+
     // Vérifier si l'utilisateur existe dans MongoDB
     let user = await User.findOne({ uid: decodedToken.uid });
     

@@ -8,6 +8,10 @@ import Dashboard from './pages/Dashboard';
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
+import SupportPage from './pages/SupportPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import EvaluationPage from './pages/EvaluationPage';
+import FinancePage from './pages/FinancePage';
 
 const theme = createTheme({
   palette: {
@@ -39,6 +43,10 @@ function App() {
                 </PrivateRoute>
               } 
             />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/evaluation" element={<EvaluationPage />} />
+            <Route path="/finance" element={<FinancePage />} />
           </Routes>
         </ThemeProvider>
       </AuthProvider>

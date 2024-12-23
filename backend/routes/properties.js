@@ -30,10 +30,12 @@ router.get('/public', async (req, res) => {
 // Obtenir les propriétés d'un utilisateur spécifique
 router.get('/my-properties', verifyToken, async (req, res) => {
   try {
-    const properties = await Property.find({ owner: req.user.uid })
-      .sort('-createdAt');
+    console.log('Recherche des propriétés pour l\'utilisateur:', req.user.uid);
+    const properties = await Property.find({ owner: req.user.uid });
+    console.log('Propriétés trouvées:', properties);
     res.json(properties);
   } catch (error) {
+    console.error('Erreur lors de la récupération des propriétés:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -41,19 +43,21 @@ router.get('/my-properties', verifyToken, async (req, res) => {
 // Ajouter une nouvelle propriété
 router.post('/', verifyToken, async (req, res) => {
   try {
-    console.log('Utilisateur authentifié:', req.user);
-    console.log('Utilisateur MongoDB:', req.mongoUser);
+    console.log('Requête reçue:', {
+      body: req.body,
+      user: req.user,
+      headers: req.headers
+    });
 
-    // Vérifier les données requises
+    // Vérification des données requises
     if (!req.body.title || !req.body.details || !req.body.address) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Données manquantes',
         required: ['title', 'details', 'address'],
-        received: Object.keys(req.body)
+        received: req.body
       });
     }
 
-    // Créer la propriété
     const property = new Property({
       owner: req.user.uid,
       title: req.body.title,
@@ -61,25 +65,26 @@ router.post('/', verifyToken, async (req, res) => {
         price: req.body.details.price,
         surface: req.body.details.surface,
         rooms: req.body.details.rooms,
-        type: req.body.details.type,
-        status: 'available'
+        type: req.body.details.type || 'apartment'
       },
       address: req.body.address
     });
 
-    const savedProperty = await property.save();
+    console.log('Propriété à sauvegarder:', property);
 
-    // Ajouter la référence de la propriété à l'utilisateur
+    const savedProperty = await property.save();
+    console.log('Propriété sauvegardée:', savedProperty);
+
+    // Ajouter la référence à l'utilisateur
     await User.findOneAndUpdate(
       { uid: req.user.uid },
       { $push: { properties: savedProperty._id } }
     );
 
-    console.log('Propriété sauvegardée avec succès:', savedProperty);
     res.status(201).json(savedProperty);
   } catch (error) {
     console.error('Erreur complète:', error);
-    res.status(400).json({ 
+    res.status(400).json({
       message: error.message,
       details: error.errors || error
     });
