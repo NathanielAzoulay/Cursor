@@ -30,12 +30,9 @@ router.get('/public', async (req, res) => {
 // Obtenir les propriétés d'un utilisateur spécifique
 router.get('/my-properties', verifyToken, async (req, res) => {
   try {
-    console.log('Recherche des propriétés pour l\'utilisateur:', req.user.uid);
     const properties = await Property.find({ owner: req.user.uid });
-    console.log('Propriétés trouvées:', properties);
     res.json(properties);
   } catch (error) {
-    console.error('Erreur lors de la récupération des propriétés:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -67,7 +64,8 @@ router.post('/', verifyToken, async (req, res) => {
         rooms: req.body.details.rooms,
         type: req.body.details.type || 'apartment'
       },
-      address: req.body.address
+      address: req.body.address,
+      images: req.body.images || []
     });
 
     console.log('Propriété à sauvegarder:', property);

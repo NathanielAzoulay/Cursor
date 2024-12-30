@@ -1,12 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const admin = require('firebase-admin');
 require('dotenv').config();
 
 // Configurer mongoose
 mongoose.set('strictQuery', false);
 
 const app = express();
+let server = null; // Pour garder une référence au serveur
 
 // Middleware
 app.use(cors({
@@ -15,43 +17,14 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Configuration MongoDB avec gestion d'erreur améliorée
-const connectDB = async () => {
-  for (let i = 0; i < 5; i++) { // Essayer 5 fois
-    try {
-      await mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        connectTimeoutMS: 30000, // Augmenter le timeout
-        socketTimeoutMS: 60000,
-        serverSelectionTimeoutMS: 30000,
-      });
-      console.log('✅ Connecté à MongoDB avec succès');
-      return true;
-    } catch (err) {
-      console.error(`❌ Tentative ${i + 1} échouée:`, err.message);
-      if (i === 4) {
-        console.error('Impossible de se connecter à MongoDB après 5 tentatives');
-        return false;
-      }
-      // Attendre 5 secondes avant de réessayer
-      await new Promise(resolve => setTimeout(resolve, 5000));
-    }
-  }
-};
-
-// Démarrer le serveur seulement après une connexion réussie
-const startServer = async () => {
-  const isConnected = await connectDB();
-  if (isConnected) {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-    });
-  } else {
-    process.exit(1);
-  }
-};
+// Initialiser Firebase Admin si ce n'est pas déjà fait
+if (!admin.apps.length) {
+  const serviceAccount = require('./config/firebase-service-account.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log('✅ Firebase Admin initialisé avec succès');
+}
 
 // Routes
 const propertiesRouter = require('./routes/properties');
@@ -66,18 +39,81 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Fonction pour démarrer le serveur Express
+const startServer = () => {
+  if (server) {
+    console.log('Le serveur est déjà en cours d\'exécution');
+    return;
+  }
+  
+  const PORT = process.env.PORT || 5000;
+  server = app.listen(PORT, () => {
+    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log('Port déjà utilisé, tentative avec un autre port...');
+      server.close();
+      server = app.listen(0); // Utiliser un port disponible
+    }
+  });
+};
+
+// Configuration MongoDB avec retry
+const connectWithRetry = () => {
+  if (mongoose.connection.readyState === 1) {
+    console.log('Déjà connecté à MongoDB');
+    return;
+  }
+
+  mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 30000,
+    authSource: 'admin'
+  })
+  .then(() => {
+    console.log('✅ Connecté à MongoDB avec succès');
+    startServer();
+  })
+  .catch(err => {
+    console.error('❌ Erreur de connexion MongoDB:', err.message);
+    console.log('Nouvelle tentative dans 5 secondes...');
+    setTimeout(connectWithRetry, 5000);
+  });
+};
+
 // Gérer la déconnexion MongoDB
 mongoose.connection.on('disconnected', () => {
   console.log('MongoDB déconnecté - tentative de reconnexion...');
-  startServer();
+  if (server) {
+    server.close(() => {
+      console.log('Serveur arrêté en raison de la déconnexion MongoDB');
+    });
+    server = null;
+  }
+  connectWithRetry();
 });
 
-mongoose.connection.on('error', (err) => {
-  console.error('Erreur MongoDB:', err);
+// Gestion des erreurs non capturées
+process.on('unhandledRejection', (err) => {
+  console.error('Erreur non gérée:', err);
 });
 
-// Démarrer le serveur
-startServer().catch(err => {
-  console.error('Erreur de démarrage:', err);
-  process.exit(1);
-}); 
+// Gestion de l'arrêt propre
+process.on('SIGINT', () => {
+  if (server) {
+    server.close(() => {
+      console.log('Serveur arrêté');
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+});
+
+// Démarrer la connexion initiale
+connectWithRetry(); 
