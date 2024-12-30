@@ -12,6 +12,7 @@ import SupportPage from './pages/SupportPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import EvaluationPage from './pages/EvaluationPage';
 import FinancePage from './pages/FinancePage';
+import AddProperty from './pages/AddProperty';
 
 const theme = createTheme({
   palette: {
@@ -35,18 +36,36 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              } 
-            />
-            <Route path="/support" element={<SupportPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/evaluation" element={<EvaluationPage />} />
-            <Route path="/finance" element={<FinancePage />} />
+            <Route path="/dashboard" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/support" element={
+              <PrivateRoute>
+                <SupportPage />
+              </PrivateRoute>
+            } />
+            <Route path="/analytics" element={
+              <PrivateRoute>
+                <AnalyticsPage />
+              </PrivateRoute>
+            } />
+            <Route path="/evaluation" element={
+              <PrivateRoute>
+                <EvaluationPage />
+              </PrivateRoute>
+            } />
+            <Route path="/finance" element={
+              <PrivateRoute>
+                <FinancePage />
+              </PrivateRoute>
+            } />
+            <Route path="/add-property" element={
+              <PrivateRoute>
+                <AddProperty />
+              </PrivateRoute>
+            } />
           </Routes>
         </ThemeProvider>
       </AuthProvider>

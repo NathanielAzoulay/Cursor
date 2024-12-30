@@ -28,10 +28,12 @@ const LoginPage = () => {
       setError('');
       setLoading(true);
       await signInWithGoogle();
-      navigate('/dashboard');
     } catch (error) {
-      console.error('Erreur Google Sign In:', error);
-      setError('Erreur lors de la connexion avec Google');
+      console.error('Erreur détaillée Google Sign In:', error);
+      setError(error.message || 'Erreur lors de la connexion avec Google');
+      if (error.code) {
+        console.log('Code erreur:', error.code);
+      }
     } finally {
       setLoading(false);
     }

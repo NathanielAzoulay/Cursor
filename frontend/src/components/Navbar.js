@@ -1,26 +1,21 @@
-import React, { useState } from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
+import React from 'react';
+import { 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Button, 
   Box,
+  IconButton,
   Menu,
-  MenuItem,
-  IconButton
+  MenuItem 
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
-import SupportIcon from '@mui/icons-material/Support';
-import CalculateIcon from '@mui/icons-material/Calculate';
 import MenuIcon from '@mui/icons-material/Menu';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
-  const [anchorEl, setAnchorEl] = useState(null);
+  const { currentUser, signOut } = useAuth();
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -30,75 +25,33 @@ const Navbar = () => {
     setAnchorEl(null);
   };
 
-  const handleNavigation = (path) => {
-    navigate(path);
-    handleClose();
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      alert('Erreur lors de la déconnexion');
+    }
   };
 
   return (
-    <AppBar position="sticky" sx={{ backgroundColor: 'black' }}>
+    <AppBar position="static">
       <Toolbar>
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ flexGrow: 1, cursor: 'pointer' }}
-          onClick={() => navigate('/')}
-        >
+        <Typography variant="h6" component={RouterLink} to="/" sx={{ 
+          flexGrow: 1,
+          textDecoration: 'none',
+          color: 'inherit'
+        }}>
           REN
         </Typography>
-        
-        {currentUser && (
-          <>
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
-              <Button 
-                color="inherit"
-                startIcon={<AnalyticsIcon />}
-                onClick={() => navigate('/analytics')}
-              >
-                Analyses
-              </Button>
-              <Button 
-                color="inherit"
-                startIcon={<CalculateIcon />}
-                onClick={() => navigate('/evaluation')}
-              >
-                Évaluation
-              </Button>
-              <Button 
-                color="inherit"
-                startIcon={<SupportIcon />}
-                onClick={() => navigate('/support')}
-              >
-                Support
-              </Button>
-              <Button 
-                color="inherit"
-                startIcon={<AccountBalanceIcon />}
-                onClick={() => navigate('/finance')}
-              >
-                Finances
-              </Button>
-              <Button 
-                color="inherit"
-                variant="outlined"
-                onClick={() => navigate('/dashboard')}
-              >
-                Dashboard
-              </Button>
-              <Button 
-                color="inherit"
-                variant="outlined"
-                onClick={logout}
-              >
-                Se déconnecter
-              </Button>
-            </Box>
 
-            {/* Menu mobile */}
-            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {currentUser ? (
+            <>
               <IconButton
                 color="inherit"
                 onClick={handleMenu}
+                edge="start"
               >
                 <MenuIcon />
               </IconButton>
@@ -107,38 +60,39 @@ const Navbar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem onClick={() => handleNavigation('/dashboard')}>
+                <MenuItem component={RouterLink} to="/dashboard" onClick={handleClose}>
                   Dashboard
                 </MenuItem>
-                <MenuItem onClick={() => handleNavigation('/analytics')}>
+                <MenuItem component={RouterLink} to="/analytics" onClick={handleClose}>
                   Analyses
                 </MenuItem>
-                <MenuItem onClick={() => handleNavigation('/evaluation')}>
+                <MenuItem component={RouterLink} to="/evaluation" onClick={handleClose}>
                   Évaluation
                 </MenuItem>
-                <MenuItem onClick={() => handleNavigation('/support')}>
+                <MenuItem component={RouterLink} to="/finance" onClick={handleClose}>
+                  Finance
+                </MenuItem>
+                <MenuItem component={RouterLink} to="/support" onClick={handleClose}>
                   Support
                 </MenuItem>
-                <MenuItem onClick={() => handleNavigation('/finance')}>
-                  Finances
-                </MenuItem>
-                <MenuItem onClick={logout}>
-                  Se déconnecter
-                </MenuItem>
               </Menu>
-            </Box>
-          </>
-        )}
-
-        {!currentUser && (
-          <Button 
-            color="inherit"
-            variant="outlined"
-            onClick={() => navigate('/login')}
-          >
-            Se connecter
-          </Button>
-        )}
+              <Button 
+                color="inherit"
+                onClick={handleLogout}
+              >
+                Déconnexion
+              </Button>
+            </>
+          ) : (
+            <Button 
+              color="inherit" 
+              component={RouterLink} 
+              to="/login"
+            >
+              Connexion
+            </Button>
+          )}
+        </Box>
       </Toolbar>
     </AppBar>
   );

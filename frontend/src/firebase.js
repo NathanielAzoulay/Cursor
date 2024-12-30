@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database";
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -9,22 +11,12 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  databaseURL: "https://ren-project1-default-rtdb.europe-west1.firebasedatabase.app"
+  databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
-// Vérifier si Firebase n'est pas déjà initialisé
-let app;
-try {
-  app = initializeApp(firebaseConfig);
-} catch (error) {
-  if (!/already exists/.test(error.message)) {
-    console.error('Firebase initialization error', error.stack);
-  }
-}
-
-// Exporter les services Firebase
+const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 export const database = getDatabase(app);
-
-// Exporter l'instance de l'application pour une utilisation ailleurs si nécessaire
-export default app; 
+export const analytics = getAnalytics(app); 
