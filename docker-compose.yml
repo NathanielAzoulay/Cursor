@@ -2,21 +2,35 @@ services:
   backend:
     build:
       context: ./backend
-    ports:
-      - "5000:5000"
-    env_file:
-      - ./backend/.env
+      dockerfile: DockerFile
     volumes:
       - ./backend:/app
-    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb+srv://na06081997:MVPUqelC5cTjXJTA@ren.jz4sz.mongodb.net/?retryWrites=true&w=majority&appName=Ren
+      - JWT_SECRET=93f39e25e6f4a0d3b7a9f8b1c6d5e4f3
+      - PORT=5000
+    depends_on:
+      - mongo
 
   frontend:
     build:
       context: ./frontend
-    ports:
-      - "3000:3000"
-    env_file:
-      - ./frontend/.env
+      dockerfile: DockerFile  # Assurez-vous que ce chemin est correct
     volumes:
       - ./frontend:/app
-    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
