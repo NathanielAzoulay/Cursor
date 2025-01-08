@@ -1,0 +1,20 @@
+# Base image
+FROM node:16
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose the backend port
+EXPOSE 5000
+
+# Command to run the backend
+CMD ["npm", "start"]

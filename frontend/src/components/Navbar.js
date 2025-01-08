@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   AppBar, 
   Toolbar, 
@@ -6,24 +6,29 @@ import {
   Button, 
   Box,
   IconButton,
-  Menu,
-  MenuItem 
+  Tabs,
+  Tab,
+  useTheme as useMuiTheme
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import MenuIcon from '@mui/icons-material/Menu';
+import { useTheme } from '../contexts/ThemeContext';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 const Navbar = () => {
   const { currentUser, signOut } = useAuth();
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const { darkMode, toggleDarkMode } = useTheme();
+  const location = useLocation();
+  const muiTheme = useMuiTheme();
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const routes = [
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/analytics', label: 'Analyses' },
+    { path: '/evaluation', label: 'Évaluation' },
+    { path: '/finance', label: 'Finance' },
+    { path: '/support', label: 'Support' }
+  ];
 
   const handleLogout = async () => {
     try {
@@ -37,57 +42,63 @@ const Navbar = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Typography variant="h6" component={RouterLink} to="/" sx={{ 
-          flexGrow: 1,
-          textDecoration: 'none',
-          color: 'inherit'
-        }}>
+        <Typography 
+          variant="h6" 
+          component={RouterLink} 
+          to="/" 
+          sx={{ 
+            textDecoration: 'none',
+            color: 'inherit',
+            flexShrink: 0,
+            mr: 3
+          }}
+        >
           REN
         </Typography>
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        {currentUser && (
+          <Tabs 
+            value={location.pathname}
+            sx={{ 
+              flexGrow: 1,
+              '& .MuiTab-root': { color: 'inherit' }
+            }}
+          >
+            {routes.map((route) => (
+              <Tab
+                key={route.path}
+                label={route.label}
+                value={route.path}
+                component={RouterLink}
+                to={route.path}
+              />
+            ))}
+          </Tabs>
+        )}
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton 
+            onClick={toggleDarkMode} 
+            color="inherit"
+            sx={{ mr: 1 }}
+          >
+            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
+
           {currentUser ? (
-            <>
-              <IconButton
-                color="inherit"
-                onClick={handleMenu}
-                edge="start"
-              >
-                <MenuIcon />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-              >
-                <MenuItem component={RouterLink} to="/dashboard" onClick={handleClose}>
-                  Dashboard
-                </MenuItem>
-                <MenuItem component={RouterLink} to="/analytics" onClick={handleClose}>
-                  Analyses
-                </MenuItem>
-                <MenuItem component={RouterLink} to="/evaluation" onClick={handleClose}>
-                  Évaluation
-                </MenuItem>
-                <MenuItem component={RouterLink} to="/finance" onClick={handleClose}>
-                  Finance
-                </MenuItem>
-                <MenuItem component={RouterLink} to="/support" onClick={handleClose}>
-                  Support
-                </MenuItem>
-              </Menu>
-              <Button 
-                color="inherit"
-                onClick={handleLogout}
-              >
-                Déconnexion
-              </Button>
-            </>
+            <Button 
+              color="inherit"
+              onClick={handleLogout}
+              variant="outlined"
+            >
+              Déconnexion
+            </Button>
           ) : (
             <Button 
               color="inherit" 
               component={RouterLink} 
               to="/login"
+              variant="outlined"
             >
               Connexion
             </Button>

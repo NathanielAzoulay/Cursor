@@ -1,10 +1,8 @@
 {
   "rules": {
-    "chats": {
-      "$uid": {
-        ".read": "$uid === auth.uid || auth.token.admin === true",
-        ".write": "$uid === auth.uid || auth.token.admin === true"
-      }
+    "messages": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 } 

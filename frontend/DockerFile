@@ -1,0 +1,20 @@
+# Base image
+FROM node:16
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose the frontend port (React default: 3000)
+EXPOSE 3000
+
+# Command to run the frontend
+CMD ["npm", "start"]
